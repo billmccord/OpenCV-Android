@@ -1,0 +1,15 @@
+== OpenCV-Android
+
+Dedicated to providing an optimized port of OpenCV for the Google Android OS.
+
+== Requirements
+
+TODO: Describe NDK / SDK requirements.  Specify which versions of Android this can work with.
+
+== Build
+
+TODO: Describe build procedures.
+
+== Example
+
+TODO: Explain how to use the example application.
