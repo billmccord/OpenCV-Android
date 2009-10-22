@@ -4,12 +4,34 @@ Dedicated to providing an optimized port of OpenCV for the Google Android OS.
 
 == Requirements
 
-TODO: Describe NDK / SDK requirements.  Specify which versions of Android this can work with.
+In order to use OpenCV-Android, you will need to download and install both the Android SDK and NDK version 1.6.  It may or may not work with a higher version.
+
+In addition to having the SDK or NDK you will also need to have one of the following:
+* An Android Phone Dev Phone (Might work with other phones, has not been tested)
+* A newer version of the QuickTime Java Libraries
+
+For those of you running on the emulator, I built a very simple Socket-based Camera server that will send images over a socket connection.  This uses the QuickTime libraries which are present by default on Mac OS X, but I haven't tested on other OSes.  If it doesn't work for you, you can always try the original WebcamBroadcaster I derived mine from which uses the JMF (which doesn't work with Mac OS X, hence the QTWebcamBroadcaster):
+http://www.tomgibara.com/android/camera-source
 
 == Build
 
-TODO: Describe build procedures.
+Building is quite simple.  I'm going to assume that you are familiar with Android if you are reading this and keep it rather short.
 
-== Example
+* Create a symbolic link from the directory where you pulled the OpenCV-Android repository to your [ANDROID_NDK_ROOT]/apps/ directory.  Examples:
+  ln -s ~/Source/OpenCV-Android opencv
 
-TODO: Explain how to use the example application.
+* From the [ANDROID_NDK_ROOT] run:
+  build/host-setup.sh
+
+* Now run:
+  make APP=opencv
+  
+By default, this will build the opencv library and push it into:
+[OPENCV_ANDROID_ROOT]/tests/OpenCVSample/libs
+
+You can change where the lib is delivered by modifying the APP_PROJECT_PATH in:
+[OPENCV_ANDROID_ROOT]/Application.mk
+
+Once you have built the OpenCV library, you can now build and [OPENCV_ANDROID_ROOT]/tests/OpenCVSample.
+
+NOTE: If you plan to use the Socket Camera, you will need to build and run the [OPENCV_ANDROID_ROOT]/tests/QTWebcamBroadcaster first.  Also, if you use Eclipse to develop Android, there are already projects defined for both of these applications.  You can simply import them into your workspace.

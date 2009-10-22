@@ -1,0 +1,36 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:orientation="vertical">
+
+	<TextView android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="Camera Source"
+		android:textSize="24sp">
+	</TextView>
+	<CheckBox android:id="@+id/RemoteCameraCheckBox"
+		android:layout_height="wrap_content" android:layout_below="@+id/TextView01"
+		android:layout_width="wrap_content" android:text="Use Remote Camera Source">
+	</CheckBox>
+
+	<LinearLayout android:layout_marginLeft="10sp"
+		android:orientation="vertical" android:layout_height="wrap_content"
+		android:layout_width="fill_parent" android:layout_marginRight="10sp"
+		android:layout_marginTop="10sp">
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="Remote Source"
+			android:textSize="24sp">
+		</TextView>
+		<EditText android:id="@+id/RemoteSourceEditText"
+			android:layout_height="wrap_content" android:text="192.168.0.102:9889"
+			android:layout_width="fill_parent">
+		</EditText>
+		<Button android:id="@+id/ResotreDefaultCameraButton"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:text="Restore Default Camera" android:layout_marginTop="10sp">
+		</Button>
+	</LinearLayout>
+
+	<Button android:id="@+id/DoneButton" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="Done"
+		android:layout_marginTop="10sp">
+	</Button>
+</LinearLayout>
