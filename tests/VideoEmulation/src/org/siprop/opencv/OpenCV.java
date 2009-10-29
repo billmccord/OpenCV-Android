@@ -26,4 +26,5 @@ public class OpenCV {
 
     public native byte[] findContours(int[] data, int w, int h);
 
+    public native byte[] findFaces(String cascadePath, int[] data, int w, int h);
 }

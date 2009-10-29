@@ -129,7 +129,10 @@ public class VideoEmulation extends Activity {
                 // Perform a findContours, but this could be any OpenCV function
                 // exposed through the JNI.
                 Log.d(TAG, "PreviewThread findContours");
-                byte[] data = mOpenCV.findContours(pixels, width, height);
+                // byte[] data = mOpenCV.findContours(pixels, width, height);
+                byte[] data = mOpenCV.findFaces(
+                        "/data/data/org.siprop.opencv/files/haarcascade_frontalface_alt.xml",
+                        pixels, width, height);
                 Bitmap faceDetectBitmap = null;
                 if (data != null && data.length > 0) {
                     faceDetectBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);

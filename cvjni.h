@@ -59,6 +59,16 @@ Java_org_siprop_opencv_OpenCV_findContours(JNIEnv* env,
 										jintArray photo_data,
 										jint width,
 										jint height);
+										
+JNIEXPORT
+jbooleanArray
+JNICALL
+Java_org_siprop_opencv_OpenCV_findFaces(JNIEnv* env,
+										jobject thiz,
+										jstring cascade_path_str,
+										jintArray photo_data,
+										jint width,
+										jint height);
 
 #ifdef __cplusplus
 }

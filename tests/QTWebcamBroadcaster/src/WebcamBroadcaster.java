@@ -44,9 +44,9 @@ public class WebcamBroadcaster {
 
     public static final int DEFAULT_PORT = 9889;
 
-    public static final int DEFAULT_WIDTH = 320;
+    public static final int DEFAULT_WIDTH = 640;
 
-    public static final int DEFAULT_HEIGHT = 240;
+    public static final int DEFAULT_HEIGHT = 480;
 
     private final Object lock = new Object();
 
