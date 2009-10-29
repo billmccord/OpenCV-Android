@@ -36,11 +36,11 @@ Java_org_siprop_opencv_OpenCV_findContours(JNIEnv* env,
 	IplImage *sourceImage;
 	int* pixels = env->GetIntArrayElements(photo_data, NULL);
 	sourceImage = loadPixels(pixels, width, height);
+	env->ReleaseIntArrayElements(photo_data, pixels, 0);
 	if(sourceImage == NULL) {
 		LOGV("Error loadPixels.");
 		return NULL;
 	}
-
 
 	IplImage *grayImage = cvCreateImage( cvGetSize(sourceImage), IPL_DEPTH_8U, 1 );		//	グレースケール画像用IplImage
 	IplImage *binaryImage = cvCreateImage( cvGetSize(sourceImage), IPL_DEPTH_8U, 1 );	//	2値画像用IplImage
@@ -80,10 +80,7 @@ Java_org_siprop_opencv_OpenCV_findContours(JNIEnv* env,
 		cvPoint( 0, 0 )			//	オフセット
 	);   
 
-
-	jbooleanArray res_array;
 	int imageSize;
-
 	CvMat stub, *mat_image;
     int channels, ipl_depth;
     mat_image = cvGetMat( sourceImage, &stub );
@@ -91,32 +88,35 @@ Java_org_siprop_opencv_OpenCV_findContours(JNIEnv* env,
 
     ipl_depth = cvCvToIplDepth(mat_image->type);
 
+	LOGV("Load loadImageBytes.");
 	WLNonFileByteStream* m_strm = new WLNonFileByteStream();
     loadImageBytes(mat_image->data.ptr, mat_image->step, mat_image->width,
                              mat_image->height, ipl_depth, channels, m_strm);
-	LOGV("Load loadImageBytes.");
-
 
 	imageSize = m_strm->GetSize();
-	res_array = env->NewBooleanArray(imageSize);
-	LOGV("Load NewByteArray.");
+	jbooleanArray res_array = env->NewBooleanArray(imageSize);
+	LOGV("Load NewBooleanArray.");
     if (res_array == NULL) {
         return NULL;
     }
     env->SetBooleanArrayRegion(res_array, 0, imageSize, (jboolean*)m_strm->GetByte());
 	LOGV("Load SetBooleanArrayRegion.");
 
-
-
+	LOGV("Release sourceImage");
 	cvReleaseImage( &sourceImage );
+	LOGV("Release binaryImage");
 	cvReleaseImage( &binaryImage );
+	LOGV("Release grayImage");
 	cvReleaseImage( &grayImage );
+	LOGV("Release contourImage");
+	cvReleaseImage( &contourImage );
+	LOGV("Release storage");
+	cvReleaseMemStorage( &storage );
+	LOGV("Delete m_strm");
 	m_strm->Close();
 	SAFE_DELETE(m_strm);
 
-
 	return res_array;
-
 }
 
 

@@ -39,6 +39,7 @@ public:
 
 protected:
     void    Allocate(int data_size);
+	void    Deallocate();
     int     _size;
     uchar*  m_start;
     uchar*  m_end;

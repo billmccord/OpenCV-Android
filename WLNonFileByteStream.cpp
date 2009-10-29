@@ -26,6 +26,7 @@ WLNonFileByteStream::WLNonFileByteStream()
 
 WLNonFileByteStream::~WLNonFileByteStream()
 {
+	Deallocate();
 }
 
 
@@ -38,6 +39,14 @@ void  WLNonFileByteStream::Allocate(int data_size)
     m_current = m_start;
 }
 
+void  WLNonFileByteStream::Deallocate()
+{
+	if(m_start)
+	{
+		delete [] m_start;
+		m_start = 0;
+	}
+}
 
 bool  WLNonFileByteStream::Open(int data_size)
 {
@@ -55,6 +64,7 @@ bool  WLNonFileByteStream::Open(int data_size)
 void  WLNonFileByteStream::Close()
 {
     m_is_opened = false;
+	Deallocate();
 }
 
 
