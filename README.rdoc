@@ -27,11 +27,11 @@ Building is quite simple.  I'm going to assume that you are familiar with Androi
   make APP=opencv
   
 By default, this will build the opencv library and push it into:
-[OPENCV_ANDROID_ROOT]/tests/OpenCVSample/libs
+[OPENCV_ANDROID_ROOT]/tests/VideoEmulation/libs
 
 You can change where the lib is delivered by modifying the APP_PROJECT_PATH in:
 [OPENCV_ANDROID_ROOT]/Application.mk
 
-Once you have built the OpenCV library, you can now build and [OPENCV_ANDROID_ROOT]/tests/OpenCVSample.
+Once you have built the OpenCV library, you can now build and [OPENCV_ANDROID_ROOT]/tests/VideoEmulation.
 
 NOTE: If you plan to use the Socket Camera, you will need to build and run the [OPENCV_ANDROID_ROOT]/tests/QTWebcamBroadcaster first.  Also, if you use Eclipse to develop Android, there are already projects defined for both of these applications.  You can simply import them into your workspace.
