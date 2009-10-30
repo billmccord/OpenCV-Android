@@ -40,7 +40,7 @@ import java.util.concurrent.SynchronousQueue;
  */
 public class VideoEmulation extends Activity {
 
-    private static final String TAG = "EmulatorOnlySample";
+    private static final String TAG = "VideoEmulation";
 
     private final int FP = ViewGroup.LayoutParams.FILL_PARENT;
 
@@ -84,25 +84,25 @@ public class VideoEmulation extends Activity {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
 
-        Log.d(TAG, "onStart");
+        Log.d(TAG, "onResume");
         mPreview = true;
         mPreviewThread.start();
     }
 
     @Override
-    public void onStop() {
-        Log.d(TAG, "onStop");
+    public void onPause() {
+        Log.d(TAG, "onPause");
         mPreview = false;
         try {
             mPreviewThread.join();
         } catch (InterruptedException e) {
-            Log.d(TAG, "onStop");
+            Log.d(TAG, "onPause");
         }
 
-        super.onStop();
+        super.onPause();
     }
 
     /*
@@ -133,6 +133,14 @@ public class VideoEmulation extends Activity {
                 byte[] data = mOpenCV.findFaces(
                         "/data/data/org.siprop.opencv/files/haarcascade_frontalface_alt.xml",
                         pixels, width, height);
+
+                // Since this is quite a lengthy process, make sure that
+                // mPreview is still true before posting the bitmap to the
+                // message handler.
+                if (!mPreview) {
+                    break;
+                }
+
                 Bitmap faceDetectBitmap = null;
                 if (data != null && data.length > 0) {
                     faceDetectBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
