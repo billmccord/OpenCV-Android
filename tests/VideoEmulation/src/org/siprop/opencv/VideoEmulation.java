@@ -42,6 +42,8 @@ public class VideoEmulation extends Activity {
 
     private static final String TAG = "VideoEmulation";
 
+    private static final String CASCADE_PATH = "/data/data/org.siprop.opencv/files/haarcascade_frontalface_alt.xml";
+
     private final int FP = ViewGroup.LayoutParams.FILL_PARENT;
 
     private SocketCamera mSocketCamera;
@@ -88,6 +90,7 @@ public class VideoEmulation extends Activity {
         super.onResume();
 
         Log.d(TAG, "onResume");
+        mOpenCV.initFindFaces(CASCADE_PATH);
         mPreview = true;
         mPreviewThread.start();
     }
@@ -98,6 +101,7 @@ public class VideoEmulation extends Activity {
         mPreview = false;
         try {
             mPreviewThread.join();
+            mOpenCV.releaseFindFaces();
         } catch (InterruptedException e) {
             Log.d(TAG, "onPause");
         }
@@ -128,11 +132,9 @@ public class VideoEmulation extends Activity {
 
                 // Perform a findContours, but this could be any OpenCV function
                 // exposed through the JNI.
-                Log.d(TAG, "PreviewThread findContours");
+                Log.d(TAG, "PreviewThread findFaces");
                 // byte[] data = mOpenCV.findContours(pixels, width, height);
-                byte[] data = mOpenCV.findFaces(
-                        "/data/data/org.siprop.opencv/files/haarcascade_frontalface_alt.xml",
-                        pixels, width, height);
+                byte[] data = mOpenCV.findFaces(pixels, width, height);
 
                 // Since this is quite a lengthy process, make sure that
                 // mPreview is still true before posting the bitmap to the

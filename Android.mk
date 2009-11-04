@@ -116,7 +116,8 @@ LOCAL_SRC_FILES := \
         cv/src/cvtemplmatch.cpp \
         cv/src/cvthresh.cpp \
         cv/src/cvundistort.cpp \
-        cv/src/cvutils.cpp
+        cv/src/cvutils.cpp \
+        cv/src/mycvHaarDetectObjects.cpp
 #        cv/src/cvkdtree.cpp \
 
 include $(BUILD_STATIC_LIBRARY)

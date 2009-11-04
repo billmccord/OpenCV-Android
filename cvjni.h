@@ -45,6 +45,11 @@ subject to the following restrictions:
 // CV Objects
 static const char* fmtSignBmp = "BM";
 
+CvHaarClassifierCascade *m_cascade = NULL;
+IplImage *m_grayImage = NULL;
+IplImage *m_smallImage = NULL;
+CvMemStorage *m_storage = NULL;
+CvRect m_prevFace;
 
 
 #ifdef __cplusplus
@@ -59,16 +64,37 @@ Java_org_siprop_opencv_OpenCV_findContours(JNIEnv* env,
 										jintArray photo_data,
 										jint width,
 										jint height);
+
+JNIEXPORT
+void
+JNICALL
+Java_org_siprop_opencv_OpenCV_initFindFaces(JNIEnv* env,
+										    jobject thiz,
+										    jstring cascade_path_str);
 										
+JNIEXPORT
+jbooleanArray
+JNICALL
+Java_org_siprop_opencv_OpenCV_findSingleFace(JNIEnv* env,
+											 jobject thiz,
+											 jintArray photo_data,
+											 jint width,
+											 jint height);
+
 JNIEXPORT
 jbooleanArray
 JNICALL
 Java_org_siprop_opencv_OpenCV_findFaces(JNIEnv* env,
 										jobject thiz,
-										jstring cascade_path_str,
 										jintArray photo_data,
 										jint width,
 										jint height);
+										
+JNIEXPORT
+void
+JNICALL
+Java_org_siprop_opencv_OpenCV_releaseFindFaces(JNIEnv* env,
+										       jobject thiz);
 
 #ifdef __cplusplus
 }
