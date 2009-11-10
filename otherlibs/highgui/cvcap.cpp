@@ -39,47 +39,55 @@
 //
 //M*/
 
-#ifndef __HIGHGUI_H_
-#define __HIGHGUI_H_
+#include "_highgui.h"
 
-#include "highgui.h"
-#include "cxmisc.h"
+#if _MSC_VER >= 1200
+#pragma warning( disable: 4711 )
+#endif
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <limits.h>
-#include <ctype.h>
-#include <assert.h>
+#if defined WIN64 && defined EM64T && defined _MSC_VER && !defined __ICL
+#pragma optimize("",off)
+#endif
 
-/* Errors */
-#define HG_OK          0 /* Don't bet on it! */
-#define HG_BADNAME    -1 /* Bad window or file name */
-#define HG_INITFAILED -2 /* Can't initialize HigHGUI. Possibly, can't find vlgrfmts.dll */
-#define HG_WCFAILED   -3 /* Can't create a window */
-#define HG_NULLPTR    -4 /* The null pointer where it should not appear */
-#define HG_BADPARAM   -5
 
-#define CV_WINDOW_MAGIC_VAL     0x00420042
-#define CV_TRACKBAR_MAGIC_VAL   0x00420043
-#define cvShowImage NULL
+/************************* Reading AVIs & Camera data **************************/
 
-/***************************** CvCapture structure ******************************/
-
-struct CvCapture
+CV_IMPL void cvReleaseCapture( CvCapture** pcapture )
 {
-    virtual ~CvCapture() {}
-    virtual double getProperty(int) { return 0; }
-    virtual bool setProperty(int, double) { return 0; }
-    virtual bool grabFrame() { return true; }
-    virtual IplImage* retrieveFrame() { return 0; }
-    virtual IplImage* queryFrame() { return grabFrame() ? retrieveFrame() : 0; }
-};
+    if( pcapture && *pcapture )
+    {
+        delete *pcapture;
+        *pcapture = 0;
+    }
+}
 
-CvCapture* cvCreateCameraCapture_Socket( const char *address, const char* port, int width, int height );
+CV_IMPL IplImage* cvQueryFrame( CvCapture* capture )
+{
+    return capture ? capture->queryFrame() : 0;
+}
 
-CVAPI(int) cvHaveImageReader(const char* filename);
-CVAPI(int) cvHaveImageWriter(const char* filename);
 
+CV_IMPL int cvGrabFrame( CvCapture* capture )
+{
+    return capture ? capture->grabFrame() : 0;
+}
 
-#endif /* __HIGHGUI_H_ */
+CV_IMPL IplImage* cvRetrieveFrame( CvCapture* capture )
+{
+    return capture ? capture->retrieveFrame() : 0;
+}
+
+CV_IMPL double cvGetCaptureProperty( CvCapture* capture, int id )
+{
+    return capture ? capture->getProperty(id) : 0;
+}
+
+CV_IMPL int cvSetCaptureProperty( CvCapture* capture, int id, double value )
+{
+    return capture ? capture->setProperty(id, value) : 0;
+}
+
+CV_IMPL CvCapture* cvCreateSocketCapture( const char *address, const char* port, int width, int height )
+{
+	return cvCreateCameraCapture_Socket(address, port, width, height);
+}

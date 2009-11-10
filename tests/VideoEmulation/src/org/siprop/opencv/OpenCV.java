@@ -16,6 +16,8 @@
 
 package org.siprop.opencv;
 
+import android.graphics.Rect;
+
 /**
  * A class JNI for interacting with the JNI interface from Java.
  */
@@ -26,9 +28,23 @@ public class OpenCV {
 
     public native byte[] findContours(int[] data, int w, int h);
 
-    public native void initFindFaces(String cascadePath);
+    public native boolean createSocketCapture(String address, String port, int width, int height);
 
-    public native byte[] findFaces(int[] data, int w, int h);
+    public native void releaseSocketCapture();
 
-    public native void releaseFindFaces();
+    public native boolean grabSourceImageFromCapture();
+
+    public native byte[] getSourceImage();
+
+    public native boolean setSourceImage(int[] data, int w, int h);
+
+    public native boolean initFaceDetection(String cascadePath);
+
+    public native void releaseFaceDetection();
+
+    public native boolean highlightFaces();
+
+    public native Rect[] findAllFaces();
+
+    public native Rect findSingleFace();
 }

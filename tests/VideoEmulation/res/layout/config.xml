@@ -2,11 +2,35 @@
 	android:layout_width="fill_parent" android:layout_height="fill_parent"
 	android:orientation="vertical">
 
-	<LinearLayout android:orientation="vertical" android:layout_height="wrap_content"
+	<TextView android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:text="OpenCV Options"
+		android:textSize="20sp">
+	</TextView>
+	<RadioGroup android:layout_width="wrap_content" android:layout_height="wrap_content">
+		<RadioButton android:text="Track Single Face" android:id="@+id/TrackSingleFaceRadioButton"
+			android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"></RadioButton>
+		<RadioButton android:text="Track All Faces" android:id="@+id/TrackAllFacesRadioButton"
+			android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="false"></RadioButton>
+		<RadioButton android:text="Find Contours" android:id="@+id/FindContoursRadioButton"
+			android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="false"></RadioButton>
+	</RadioGroup>
+
+	<LinearLayout android:layout_marginLeft="10sp"
+		android:orientation="vertical" android:layout_height="wrap_content"
+		android:layout_width="fill_parent">
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="Client Camera"
+			android:textSize="20sp">
+		</TextView>
+		<CheckBox android:text="Use C++ Socket Capture" android:id="@+id/UseCSocketCapture" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"></CheckBox>
+</LinearLayout>
+
+	<LinearLayout android:layout_marginLeft="10sp"
+		android:orientation="vertical" android:layout_height="wrap_content"
 		android:layout_width="fill_parent">
 		<TextView android:layout_width="wrap_content"
 			android:layout_height="wrap_content" android:text="Remote Source"
-			android:textSize="24sp">
+			android:textSize="20sp">
 		</TextView>
 		<EditText android:id="@+id/RemoteSourceEditText"
 			android:layout_height="wrap_content" android:text="192.168.0.102:9889"
@@ -22,4 +46,6 @@
 		android:layout_height="wrap_content" android:text="Done"
 		android:layout_marginTop="10sp">
 	</Button>
+
+
 </LinearLayout>

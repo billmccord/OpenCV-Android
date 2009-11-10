@@ -27,6 +27,7 @@ subject to the following restrictions:
 #include "grfmt_bmp.h"
 
 #define LOGV(...) __android_log_print(ANDROID_LOG_SILENT, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 //ANDROID_LOG_UNKNOWN, ANDROID_LOG_DEFAULT, ANDROID_LOG_VERBOSE, ANDROID_LOG_DEBUG, ANDROID_LOG_INFO, ANDROID_LOG_WARN, ANDROID_LOG_ERROR, ANDROID_LOG_FATAL, ANDROID_LOG_SILENT
 //LOGV(ANDROID_LOG_DEBUG, "JNI", "");
 
@@ -34,8 +35,8 @@ subject to the following restrictions:
 #define LOG_TAG "CVJNI"
 #define INVALID_ARGUMENT -18456
 
-#define		SAFE_DELETE(p)			{ if(p){ delete (p); (p)=NULL; } }
-#define		SAFE_DELETE_ARRAY(p)	{ if(p){ delete [](p); (p)=NULL; } }
+#define		SAFE_DELETE(p)			{ if(p){ delete (p); (p)=0; } }
+#define		SAFE_DELETE_ARRAY(p)	{ if(p){ delete [](p); (p)=0; } }
 
 
 #define IMAGE( i, x, y, n )   *(( unsigned char * )(( i )->imageData      \
@@ -45,11 +46,15 @@ subject to the following restrictions:
 // CV Objects
 static const char* fmtSignBmp = "BM";
 
-CvHaarClassifierCascade *m_cascade = NULL;
-IplImage *m_grayImage = NULL;
-IplImage *m_smallImage = NULL;
-CvMemStorage *m_storage = NULL;
-CvRect m_prevFace;
+CvCapture *m_capture = 0;
+CvHaarClassifierCascade *m_cascade = 0;
+IplImage *m_sourceImage = 0;
+IplImage *m_grayImage = 0;
+IplImage *m_smallImage = 0;
+CvMemStorage *m_storage = 0;
+bool m_trackSingleFace = true;
+CvSeq *m_facesFound = 0;
+CvRect m_faceCropArea;
 
 
 #ifdef __cplusplus
@@ -57,26 +62,38 @@ extern "C" {
 #endif
 
 JNIEXPORT
-jbooleanArray
+jboolean
 JNICALL
-Java_org_siprop_opencv_OpenCV_findContours(JNIEnv* env,
-										jobject thiz,
-										jintArray photo_data,
-										jint width,
-										jint height);
+Java_org_siprop_opencv_OpenCV_createSocketCapture(JNIEnv* env,
+												  jobject thiz,
+												  jstring address_str,
+												  jstring port_str,
+												  jint width,
+												  jint height);
 
 JNIEXPORT
 void
 JNICALL
-Java_org_siprop_opencv_OpenCV_initFindFaces(JNIEnv* env,
-										    jobject thiz,
-										    jstring cascade_path_str);
-										
+Java_org_siprop_opencv_OpenCV_releaseSocketCapture(JNIEnv* env,
+												   jobject thiz);
+
+JNIEXPORT
+jboolean
+JNICALL
+Java_org_siprop_opencv_OpenCV_grabSourceImageFromCapture(JNIEnv* env,
+														 jobject thiz);
+														
 JNIEXPORT
 jbooleanArray
 JNICALL
-Java_org_siprop_opencv_OpenCV_findSingleFace(JNIEnv* env,
-											 jobject thiz,
+Java_org_siprop_opencv_OpenCV_getSourceImage(JNIEnv* env,
+											 jobject thiz);
+
+JNIEXPORT
+jboolean
+JNICALL
+Java_org_siprop_opencv_OpenCV_setSourceImage(JNIEnv* env,
+									    	 jobject thiz,
 											 jintArray photo_data,
 											 jint width,
 											 jint height);
@@ -84,17 +101,41 @@ Java_org_siprop_opencv_OpenCV_findSingleFace(JNIEnv* env,
 JNIEXPORT
 jbooleanArray
 JNICALL
-Java_org_siprop_opencv_OpenCV_findFaces(JNIEnv* env,
+Java_org_siprop_opencv_OpenCV_findContours(JNIEnv* env,
 										jobject thiz,
-										jintArray photo_data,
 										jint width,
 										jint height);
-										
+
+JNIEXPORT
+jboolean
+JNICALL
+Java_org_siprop_opencv_OpenCV_initFaceDetection(JNIEnv* env,
+												jobject thiz,
+												jstring cascade_path_str);
+												
 JNIEXPORT
 void
 JNICALL
-Java_org_siprop_opencv_OpenCV_releaseFindFaces(JNIEnv* env,
-										       jobject thiz);
+Java_org_siprop_opencv_OpenCV_releaseFaceDetection(JNIEnv* env,
+									       	  	   jobject thiz);
+
+JNIEXPORT
+jboolean
+JNICALL
+Java_org_siprop_opencv_OpenCV_highlightFaces(JNIEnv* env,
+											 jobject thiz);
+
+JNIEXPORT
+jobjectArray
+JNICALL
+Java_org_siprop_opencv_OpenCV_findAllFaces(JNIEnv* env,
+									       jobject thiz);
+									
+JNIEXPORT
+jobject
+JNICALL
+Java_org_siprop_opencv_OpenCV_findSingleFace(JNIEnv* env,
+											 jobject thiz);
 
 #ifdef __cplusplus
 }
@@ -198,7 +239,7 @@ bool is_NULL_field_JavaObj(JNIEnv* env, jobject java_obj, const char* field_name
 	jfieldID fid = env->GetFieldID(clazz, field_name, field_type);
 
 	jobject obj = env->GetObjectField(java_obj, fid);
-	if(obj == NULL) {
+	if(obj == 0) {
 		LOGV("Object is NULL!");
 		return true;
 	}

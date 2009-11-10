@@ -160,6 +160,54 @@ CVAPI(void) cvConvertImage( const CvArr* src, CvArr* dst, int flags CV_DEFAULT(0
 CVAPI(int) cvWaitKey(int delay CV_DEFAULT(0));
 
 
+/****************************************************************************************\
+*                         Working with Video Files and Cameras                           *
+\****************************************************************************************/
+
+/* "black box" capture structure */
+typedef struct CvCapture CvCapture;
+
+/* start capturing frames from video file */
+CVAPI(CvCapture*) cvCreateSocketCapture( const char *address, const char* port, int width, int height );
+
+/* grab a frame, return 1 on success, 0 on fail.
+  this function is thought to be fast               */
+CVAPI(int) cvGrabFrame( CvCapture* capture );
+
+/* get the frame grabbed with cvGrabFrame(..)
+  This function may apply some frame processing like
+  frame decompression, flipping etc.
+  !!!DO NOT RELEASE or MODIFY the retrieved frame!!! */
+CVAPI(IplImage*) cvRetrieveFrame( CvCapture* capture );
+
+/* Just a combination of cvGrabFrame and cvRetrieveFrame
+   !!!DO NOT RELEASE or MODIFY the retrieved frame!!!      */
+CVAPI(IplImage*) cvQueryFrame( CvCapture* capture );
+
+/* stop capturing/reading and free resources */
+CVAPI(void) cvReleaseCapture( CvCapture** capture );
+
+#define CV_CAP_PROP_POS_MSEC       0
+#define CV_CAP_PROP_POS_FRAMES     1
+#define CV_CAP_PROP_POS_AVI_RATIO  2
+#define CV_CAP_PROP_FRAME_WIDTH    3
+#define CV_CAP_PROP_FRAME_HEIGHT   4
+#define CV_CAP_PROP_FPS            5
+#define CV_CAP_PROP_FOURCC         6
+#define CV_CAP_PROP_FRAME_COUNT    7
+#define CV_CAP_PROP_FORMAT         8
+#define CV_CAP_PROP_MODE           9
+#define CV_CAP_PROP_BRIGHTNESS    10
+#define CV_CAP_PROP_CONTRAST      11
+#define CV_CAP_PROP_SATURATION    12
+#define CV_CAP_PROP_HUE           13
+#define CV_CAP_PROP_GAIN          14
+#define CV_CAP_PROP_CONVERT_RGB   15
+
+
+/* retrieve or set capture properties */
+CVAPI(double) cvGetCaptureProperty( CvCapture* capture, int property_id );
+CVAPI(int)    cvSetCaptureProperty( CvCapture* capture, int property_id, double value );
 
 /****************************************************************************************\
 *                              Obsolete functions/synonyms                               *

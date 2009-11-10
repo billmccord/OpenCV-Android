@@ -1,4 +1,4 @@
-== OpenCV-Android
+= OpenCV-Android
 
 Dedicated to providing an optimized port of OpenCV for the Google Android OS.
 
@@ -34,9 +34,9 @@ You can change where the lib is delivered by modifying the APP_PROJECT_PATH in:
 
 Once you have built the OpenCV library, you can now build and [OPENCV_ANDROID_ROOT]/tests/VideoEmulation.
 
-NOTE: If you plan to use the Socket Camera, you will need to build and run the [OPENCV_ANDROID_ROOT]/tests/QTWebcamBroadcaster first.  Also, if you use Eclipse to develop Android, there are already projects defined for both of these applications.  You can simply import them into your workspace.
+<b>NOTE:</b> If you plan to use the Socket Camera, you will need to build and run the [OPENCV_ANDROID_ROOT]/tests/QTWebcamBroadcaster first.  Also, if you use Eclipse to develop Android, there are already projects defined for both of these applications.  You can simply import them into your workspace.
 
-== Run
+== Setup
 
 If you want to test face tracking, then you need to have a Haar Classifier Cascade XML.  I have provided one for use and it is stored in:
 tests/haarcascade_frontalface_alt.xml
@@ -44,4 +44,33 @@ tests/haarcascade_frontalface_alt.xml
 Before attempting to run the VideoEmulator application, you must first copy this XML file into the emulator in the following location:
 /data/data/org.siprop.opencv/files/haarcascade_frontalface_alt.xml
 
-Currently this is a hard-coded path that we look up, but hopefully this can be remedied in a future version.
+Currently, this is a hard-coded path that we look up.  Hopefully, this can be remedied in a future version.
+
+== Run
+
+In order to use the VideoEmulator, you have to use the emulator (hence the name.)  If you have a Dev Phone, you can play around with the old 'OpenCVSample' test or modify the VideoEmulator to support a real camera.  This is something we will work on resolving in the future.
+
+Using the emulator there are two slightly different 'flavors' of running.  Both are socket based cameras, but one is written in C++ and emulates a real OpenCV Capture while the other (loosely) emulates a camera implementation in Java.  The C++ version is the default as it is slightly faster and takes a little less memory.  Also, the ultimate goal is to hook up with a real camera in C++ so that we don't have to pass huge amounts of data (images) back and forth through the JNI interface.
+
+<b>NOTE:</b> For all of these examples you cannot use localhost or 127.0.0.1 as your address for the socket camera.  The reason is because when the client is running on the Android emulator, both of these map to Android's localhost, not the machine you are running the emulator on.  This means you have to be connected to a network in order to use the socket camera, a limitation.
+
+=== C++
+
+Since this is the default, we have made it pretty easy...
+
+* Start the WebcamBroadcaster - this is a socket server that grabs images from your camera and serves them up
+* Start the VideoEmulator - this runs the Android application that allows you to try out the various pieces implemented thus far
+* Once the application comes up, you will have to configure for your machine address and port for the socket camera to work.
+* Leave Use C++ SocketCapture CHECKED!
+* Choose which test you want to run.
+
+=== Java
+
+To use Java, you have to make a small code change.  Eventually we will make this a configurable option without having to make a code change.  The reason is because when we send data over a socket from Java to Java it is faster to send serialized buffered images.  However, when we send data to C++, we have to send a raw byte array.
+
+* Modify the WebcamBroadcaster by changing the default value assigned to RAW to false.
+* Start the WebcamBroadcaster - this is a socket server that grabs images from your camera and serves them up
+* Start the VideoEmulator - this runs the Android application that allows you to try out the various pieces implemented thus far
+* Once the application comes up, you will have to configure for your machine address and port for the socket camera to work.
+* UNCHECK Use C++ SocketCapture!
+* Choose which test you want to run.

@@ -243,7 +243,9 @@ LOCAL_SRC_FILES := \
         otherlibs/highgui/image.cpp \
         otherlibs/highgui/loadsave.cpp \
         otherlibs/highgui/precomp.cpp \
-        otherlibs/highgui/utils.cpp
+        otherlibs/highgui/utils.cpp \
+        otherlibs/highgui/cvcap.cpp \
+        otherlibs/highgui/cvcap_socket.cpp
 
 include $(BUILD_STATIC_LIBRARY)
 

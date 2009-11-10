@@ -20,7 +20,7 @@ import javax.imageio.ImageIO;
 
 public class WebcamBroadcaster {
 
-    public static boolean RAW = false;
+    public static boolean RAW = true;
 
     public static void main(String[] args) throws Exception {
         int[] values = new int[args.length];
@@ -176,7 +176,7 @@ public class WebcamBroadcaster {
             try {
                 ss.close();
             } catch (IOException e) {
-                /* ignore */
+                e.printStackTrace();
             }
         }
 

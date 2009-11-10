@@ -21,6 +21,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -46,19 +47,28 @@ public class VideoEmulation extends Activity {
 
     private final int FP = ViewGroup.LayoutParams.FILL_PARENT;
 
+    // THESE MUST MATCH THE WIDTH AND HEIGHT OF THE WEBCAMBROADCASTER!
+    public static final int DEFAULT_WIDTH = 300;
+
+    public static final int DEFAULT_HEIGHT = 300;
+
     private SocketCamera mSocketCamera;
 
-    private OpenCV mOpenCV = new OpenCV();
+    private OpenCV mOpenCV;
 
-    private String mRemoteCameraAddress = null;
+    private String mRemoteCameraAddress;
 
-    private int mRemoteCameraPort = 0;
+    private String mOpenCVAction;
 
-    private boolean mPreview = false;
+    private String mCameraOption;
+
+    private String mRemoteCameraPort;
+
+    private boolean mPreview;
 
     private ImageView mImageView;
 
-    private SynchronousQueue<Bitmap> mSyncQueue = new SynchronousQueue<Bitmap>();
+    private SynchronousQueue<Bitmap> mSyncQueue;
 
     private ActivityManager mActivityMgr;
 
@@ -70,15 +80,23 @@ public class VideoEmulation extends Activity {
 
         Log.d(TAG, "onCreate");
 
+        mOpenCV = new OpenCV();
+        mSyncQueue = new SynchronousQueue<Bitmap>();
+
         // Initialize Camera.
+        mPreview = false;
         setContentView(R.layout.main);
         mImageView = new ImageView(this);
 
         Bundle extras = getIntent().getExtras();
         mRemoteCameraAddress = extras
-                .getString(SocketCameraConfiguration.EXTRA_REMOTE_CAMERA_ADDRESS);
-        mRemoteCameraPort = extras.getInt(SocketCameraConfiguration.EXTRA_REMOTE_CAMERA_PORT);
-        mSocketCamera = new SocketCamera(mRemoteCameraAddress, mRemoteCameraPort);
+                .getString(VideoEmulationConfiguration.EXTRA_REMOTE_CAMERA_ADDRESS);
+        mRemoteCameraPort = extras.getString(VideoEmulationConfiguration.EXTRA_REMOTE_CAMERA_PORT);
+
+        mOpenCVAction = extras.getString(VideoEmulationConfiguration.EXTRA_OPENCV_ACTION);
+        Log.d(TAG, "mOpenCVAction = " + mOpenCVAction);
+
+        mCameraOption = extras.getString(VideoEmulationConfiguration.EXTRA_CAMERA_OPTION);
 
         // Let's monitor for memory leaks.
         mActivityMgr = (ActivityManager)super.getSystemService(Context.ACTIVITY_SERVICE);
@@ -87,10 +105,24 @@ public class VideoEmulation extends Activity {
 
     @Override
     public void onResume() {
+        Log.d(TAG, "onResume");
         super.onResume();
 
-        Log.d(TAG, "onResume");
-        mOpenCV.initFindFaces(CASCADE_PATH);
+        Log.d(TAG, "initFaceDetect");
+        if (!mOpenCV.initFaceDetection(CASCADE_PATH)) {
+            Log.d(TAG, "Failed to initialize face detection!");
+            return;
+        }
+
+        if (mCameraOption.equals(VideoEmulationConfiguration.C_SOCKET_CAMERA)) {
+            if (!mOpenCV.createSocketCapture(mRemoteCameraAddress, mRemoteCameraPort, DEFAULT_WIDTH, DEFAULT_HEIGHT)) {
+                Log.d(TAG, "Failed to create socket capture!");
+                return;
+            }
+        } else {
+            mSocketCamera = new SocketCamera(mRemoteCameraAddress, Short.parseShort(mRemoteCameraPort));
+        }
+
         mPreview = true;
         mPreviewThread.start();
     }
@@ -101,9 +133,14 @@ public class VideoEmulation extends Activity {
         mPreview = false;
         try {
             mPreviewThread.join();
-            mOpenCV.releaseFindFaces();
         } catch (InterruptedException e) {
             Log.d(TAG, "onPause");
+        }
+
+        mSocketCamera = null;
+        mOpenCV.releaseFaceDetection();
+        if (mCameraOption.equals(VideoEmulationConfiguration.C_SOCKET_CAMERA)) {
+            mOpenCV.releaseSocketCapture();
         }
 
         super.onPause();
@@ -123,18 +160,74 @@ public class VideoEmulation extends Activity {
 
             while (mPreview) {
                 Log.d(TAG, "PreviewThread captureBitmap");
-                Bitmap bitmap = mSocketCamera.captureBitmap();
-                int width = bitmap.getWidth();
-                int height = bitmap.getHeight();
+                Log.d(TAG, "mOpenCVAction in PreviewThread = " + mOpenCVAction);
+                int[] pixels = null;
+                int width = DEFAULT_WIDTH;
+                int height = DEFAULT_HEIGHT;
+                boolean grabFailed = false;
+                Bitmap faceDetectBitmap = null;
+                if (!mCameraOption.equals(VideoEmulationConfiguration.C_SOCKET_CAMERA)) {
+                    faceDetectBitmap = mSocketCamera.captureBitmap();
+                    width = faceDetectBitmap.getWidth();
+                    height = faceDetectBitmap.getHeight();
 
-                int[] pixels = new int[width * height];
-                bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+                    pixels = new int[width * height];
+                    faceDetectBitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+                    if (!mOpenCV.setSourceImage(pixels, width, height)) {
+                        grabFailed = true;
+                        Log.d(TAG, "Error occurred while setting the source image pixels");
+                    }
+                } else {
+                    if (!mOpenCV.grabSourceImageFromCapture()) {
+                        grabFailed = true;
+                        Log.d(TAG, "Error occurred while grabbing the source image from capture");
+                    }
+                }
 
-                // Perform a findContours, but this could be any OpenCV function
-                // exposed through the JNI.
-                Log.d(TAG, "PreviewThread findFaces");
-                // byte[] data = mOpenCV.findContours(pixels, width, height);
-                byte[] data = mOpenCV.findFaces(pixels, width, height);
+                byte[] data = null;
+                if (!grabFailed) {
+                    // Perform a findContours, but this could be any OpenCV function
+                    // exposed through the JNI.
+                    Log.d(TAG, "PreviewThread findFaces");
+                    if (mOpenCVAction.equals(VideoEmulationConfiguration.FIND_CONTOURS)) {
+                        Log.d(TAG, "Finding Contours");
+                        data = mOpenCV.findContours(pixels, width, height);
+                    }
+                    else {
+                        if (mOpenCVAction.equals(VideoEmulationConfiguration.TRACK_ALL_FACES)) {
+                            Log.d(TAG, "Tracking All Faces");
+                            Rect[] faces = mOpenCV.findAllFaces();
+                            if (faces != null && faces.length > 0) {
+                                for (int i = 0; i < faces.length; i++) {
+                                    Log.d(TAG, "Face #" + i + ": " + faces[i]);
+                                }
+
+                                if (!mOpenCV.highlightFaces()) {
+                                    Log.d(TAG, "Error occurred while highlighting the detected faces");
+                                }
+                            } else {
+                                Log.d(TAG, "No faces were detected");
+                            }
+                        } else {
+                            Log.d(TAG, "Tracking Single Face");
+                            Rect face = mOpenCV.findSingleFace();
+                            if (face != null) {
+                                Log.d(TAG, "Single Face: " + face);
+
+                                if (!mOpenCV.highlightFaces()) {
+                                    Log.d(TAG, "Error occurred while highlighting the detected faces");
+                                }
+                            } else {
+                                Log.d(TAG, "No faces were detected");
+                            }
+                        }
+
+                        // We grab the source image regardless of faces are found or not.
+                        data = mOpenCV.getSourceImage();
+                    }
+                } else {
+                    Log.d(TAG, "Error occurred, no image was grabbed!");
+                }
 
                 // Since this is quite a lengthy process, make sure that
                 // mPreview is still true before posting the bitmap to the
@@ -143,31 +236,29 @@ public class VideoEmulation extends Activity {
                     break;
                 }
 
-                Bitmap faceDetectBitmap = null;
                 if (data != null && data.length > 0) {
                     faceDetectBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                 }
 
                 // If no modified image was generated then just display the
                 // original.
-                Bitmap bitmapToSend;
+                Bitmap bitmapToSend = null;
                 if (faceDetectBitmap != null) {
                     Log.d(TAG, "PreviewThread setImageBitmap(faceDetectBitmap)");
                     bitmapToSend = faceDetectBitmap;
-                } else {
-                    Log.d(TAG, "PreviewThread setImageBitmap(bitmap)");
-                    bitmapToSend = bitmap;
                 }
 
-                // Notify the handler that another modified image is on the way.
-                mHandler.sendMessage(mHandler.obtainMessage());
+                if (bitmapToSend != null) {
+                    // Notify the handler that another modified image is on the way.
+                    mHandler.sendMessage(mHandler.obtainMessage());
 
-                try {
-                    Log.d(TAG, "PreviewThread Put Bitmap");
-                    // Wait here until the image is grabbed.
-                    mSyncQueue.put(bitmapToSend);
-                } catch (InterruptedException e1) {
-                    Log.d(TAG, "PreviewThread InterruptedException");
+                    try {
+                        Log.d(TAG, "PreviewThread Put Bitmap");
+                        // Wait here until the image is grabbed.
+                        mSyncQueue.put(bitmapToSend);
+                    } catch (InterruptedException e1) {
+                        Log.d(TAG, "PreviewThread InterruptedException");
+                    }
                 }
             }
         }

@@ -19,17 +19,20 @@ package org.siprop.opencv;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RadioButton;
 
 /**
  * Simple class for configuring which camera to use.
  *
  * @author Bill McCord
  */
-public final class SocketCameraConfiguration extends Activity {
+public final class VideoEmulationConfiguration extends Activity {
 
     public static final String EXTRA_IS_REMOTE_CAMERA = "IS_REMOTE_CAMERA";
 
@@ -37,7 +40,23 @@ public final class SocketCameraConfiguration extends Activity {
 
     public static final String EXTRA_REMOTE_CAMERA_PORT = "REMOTE_CAMERA_PORT";
 
+    public static final String EXTRA_OPENCV_ACTION = "OPENCV_ACTION";
+
+    public static final String EXTRA_CAMERA_OPTION = "CAMERA_OPTION";
+
+    public static final String FIND_CONTOURS = "FIND_CONTOURS";
+
+    public static final String TRACK_ALL_FACES = "TRACK_ALL_FACES";
+
+    public static final String TRACK_SINGLE_FACE = "TRACK_SINGLE_FACE";
+
+    public static final String C_SOCKET_CAMERA = "C_SOCKET_CAMERA";
+
+    public static final String JAVA_SOCKET_CAMERA = "JAVA_SOCKET_CAMERA";
+
     private static final String DEFAULT_REMOTE_CAMERA = "192.168.0.102:9889";
+
+    private static final String TAG = "VideoEmulationConfiguration";
 
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
@@ -62,13 +81,13 @@ public final class SocketCameraConfiguration extends Activity {
         public void onClick(View arg0) {
             boolean skipActivity = false;
             String address = null;
-            int port = 0;
+            String port = null;
             String remoteCameraStr = ((EditText)findViewById(R.id.RemoteSourceEditText)).getText()
                     .toString();
             String[] remoteCameraStrArr = remoteCameraStr.split(":");
             if (remoteCameraStrArr.length == 2) {
                 address = remoteCameraStrArr[0];
-                port = Integer.parseInt(remoteCameraStrArr[1]);
+                port = remoteCameraStrArr[1];
             } else {
                 skipActivity = true;
             }
@@ -77,6 +96,27 @@ public final class SocketCameraConfiguration extends Activity {
                 Intent invoker = new Intent();
                 invoker.putExtra(EXTRA_REMOTE_CAMERA_ADDRESS, address);
                 invoker.putExtra(EXTRA_REMOTE_CAMERA_PORT, port);
+
+                RadioButton trackAllFacesRadioButton = (RadioButton)findViewById(R.id.TrackAllFacesRadioButton);
+                RadioButton findContoursRadioButton = (RadioButton)findViewById(R.id.FindContoursRadioButton);
+
+                if (trackAllFacesRadioButton.isChecked()) {
+                    Log.v(TAG, "Track All Faces");
+                    invoker.putExtra(EXTRA_OPENCV_ACTION, TRACK_ALL_FACES);
+                } else if (findContoursRadioButton.isChecked()) {
+                    Log.v(TAG, "Find Contours");
+                    invoker.putExtra(EXTRA_OPENCV_ACTION, FIND_CONTOURS);
+                } else {
+                    Log.v(TAG, "Track Single Face");
+                    invoker.putExtra(EXTRA_OPENCV_ACTION, TRACK_SINGLE_FACE);
+                }
+
+                CheckBox useCSocketCamera = (CheckBox)findViewById(R.id.UseCSocketCapture);
+                if (useCSocketCamera.isChecked()) {
+                    invoker.putExtra(EXTRA_CAMERA_OPTION, C_SOCKET_CAMERA);
+                } else {
+                    invoker.putExtra(EXTRA_CAMERA_OPTION, JAVA_SOCKET_CAMERA);
+                }
 
                 // Invoke the VideoEmulation activity after the camera
                 // is successfully configured.
