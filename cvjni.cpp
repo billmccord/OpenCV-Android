@@ -32,8 +32,9 @@ subject to the following restrictions:
 // CV_HAAR_DO_CANNY_PRUNING | CV_HAAR_SCALE_IMAGE
 #define MIN_SIZE_WIDTH (20)
 #define MIN_SIZE_HEIGHT (20)
-#define PAD_FACE (40)
-#define PAD_FACE_2 (PAD_FACE * 2)
+#define PAD_FACE_SIZE (10)
+#define PAD_FACE_AREA (40)
+#define PAD_FACE_AREA_2 (PAD_FACE_AREA * 2)
 
 // Initialize a socket capture to grab images from a socket connection.
 JNIEXPORT
@@ -308,6 +309,9 @@ Java_org_siprop_opencv_OpenCV_initFaceDetection(JNIEnv* env,
 	char buffer[100];
 	clock_t total_time_start = clock();
 	
+	m_smallestFaceSize.width = MIN_SIZE_WIDTH;
+	m_smallestFaceSize.height = MIN_SIZE_HEIGHT;
+	
 	const char *cascade_path_chars = env->GetStringUTFChars(cascade_path_str, 0);
 	if (cascade_path_chars == 0) {
 		LOGE("Error getting cascade string.");
@@ -485,7 +489,6 @@ Java_org_siprop_opencv_OpenCV_findAllFaces(JNIEnv* env,
 	} else {
 		sprintf(buffer, "FACES_DETECTED %d", m_facesFound->total);
 		LOGV(buffer);
-		m_trackSingleFace = false;
 		m_faceCropArea.width = m_faceCropArea.height = 0;
 		faceRects = seqRectsToAndroidRects(env, m_facesFound);
 	}
@@ -508,14 +511,14 @@ void storePreviousFace(CvRect* face) {
 		LOGV(buffer);
 	}
 	
-	int startX = MAX(face->x - PAD_FACE, 0);
-	int startY = MAX(face->y - PAD_FACE, 0);
-	int w = m_smallImage->width - startX - face->width - PAD_FACE_2;
-	int h = m_smallImage->height - startY - face->height - PAD_FACE_2;
-	int sw = face->x - PAD_FACE, sh = face->y - PAD_FACE;
+	int startX = MAX(face->x - PAD_FACE_AREA, 0);
+	int startY = MAX(face->y - PAD_FACE_AREA, 0);
+	int w = m_smallImage->width - startX - face->width - PAD_FACE_AREA_2;
+	int h = m_smallImage->height - startY - face->height - PAD_FACE_AREA_2;
+	int sw = face->x - PAD_FACE_AREA, sh = face->y - PAD_FACE_AREA;
 	m_faceCropArea = cvRect(startX, startY, 
-		face->width + PAD_FACE_2 + ((w < 0) ? w : 0) + ((sw < 0) ? sw : 0),
-		face->height + PAD_FACE_2 + ((h < 0) ? h : 0) + ((sh < 0) ? sh : 0));
+		face->width + PAD_FACE_AREA_2 + ((w < 0) ? w : 0) + ((sw < 0) ? sw : 0),
+		face->height + PAD_FACE_AREA_2 + ((h < 0) ? h : 0) + ((sh < 0) ? sh : 0));
 	sprintf(buffer, "m_faceCropArea: (%d, %d) to (%d, %d)", m_faceCropArea.x, m_faceCropArea.y, 
 		m_faceCropArea.x + m_faceCropArea.width, m_faceCropArea.y + m_faceCropArea.height);
 	LOGV(buffer);
@@ -573,7 +576,7 @@ Java_org_siprop_opencv_OpenCV_findSingleFace(JNIEnv* env,
 
 	clock_t haar_detect_time_start = clock();
     m_facesFound = mycvHaarDetectObjects(m_smallImage, m_cascade, m_storage, HAAR_SCALE, 
-		MIN_NEIGHBORS, HAAR_FLAGS_SINGLE_FACE, cvSize(MIN_SIZE_WIDTH, MIN_SIZE_HEIGHT));
+		MIN_NEIGHBORS, HAAR_FLAGS_SINGLE_FACE, m_smallestFaceSize);
 		
 	clock_t haar_detect_time_finish = clock() - haar_detect_time_start;
 	sprintf(buffer, "Total Time to cvHaarDetectObjects in findSingleFace: %f", (double)haar_detect_time_finish / (double)CLOCKS_PER_SEC);
@@ -583,6 +586,8 @@ Java_org_siprop_opencv_OpenCV_findSingleFace(JNIEnv* env,
 	if (m_facesFound == 0 || m_facesFound->total <= 0) {
 		LOGV("FACES_DETECTED 0");
 		m_faceCropArea.width = m_faceCropArea.height = 0;
+		m_smallestFaceSize.width = MIN_SIZE_WIDTH;
+		m_smallestFaceSize.height = MIN_SIZE_HEIGHT;
 	} else {
 		LOGV("FACES_DETECTED 1");
 		CvRect *face = (CvRect*)cvGetSeqElem(m_facesFound, 0);
@@ -590,8 +595,9 @@ Java_org_siprop_opencv_OpenCV_findSingleFace(JNIEnv* env,
 			LOGE("Invalid rectangle detected");
 			return 0;
 		}
+		m_smallestFaceSize.width = MAX(face->width - PAD_FACE_SIZE, MIN_SIZE_WIDTH);
+		m_smallestFaceSize.height = MAX(face->height - PAD_FACE_SIZE, MIN_SIZE_HEIGHT);
 		faceRect = rectToAndroidRect(env, face);
-		m_trackSingleFace = true;
 		storePreviousFace(face);
 	}
 	
@@ -647,9 +653,6 @@ Java_org_siprop_opencv_OpenCV_highlightFaces(JNIEnv* env,
 	if (m_facesFound == 0 || m_facesFound->total <= 0) {
 		LOGV("No faces found to highlight!");
 		return false;
-	} else if (m_trackSingleFace) {
-		CvRect *face = (CvRect*)cvGetSeqElem(m_facesFound, 0);
-		highlightFace(m_sourceImage, face, IMAGE_SCALE);
 	} else {
 		highlightFaces(m_sourceImage, m_facesFound, IMAGE_SCALE);
 	}

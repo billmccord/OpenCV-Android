@@ -52,9 +52,9 @@ IplImage *m_sourceImage = 0;
 IplImage *m_grayImage = 0;
 IplImage *m_smallImage = 0;
 CvMemStorage *m_storage = 0;
-bool m_trackSingleFace = true;
 CvSeq *m_facesFound = 0;
 CvRect m_faceCropArea;
+CvSize m_smallestFaceSize;
 
 
 #ifdef __cplusplus
