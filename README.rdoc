@@ -4,7 +4,7 @@ Dedicated to providing an optimized port of OpenCV for the Google Android OS.
 
 == Requirements
 
-In order to use OpenCV-Android, you will need to download and install both the Android SDK and NDK version 1.6.  It may or may not work with a higher version.
+In order to use OpenCV-Android, you will need to download and install both the Android SDK and NDK version 1.6.  It may or may not work with a higher version. It has been confirmed that this doesn't work with older versions, so please use 1.6 or higher.
 
 In addition to having the SDK or NDK you will also need to have one of the following:
 * An Android Phone Dev Phone (Might work with other phones, has not been tested)
