@@ -130,7 +130,7 @@
     #include <alloca.h>
 #elif defined HAVE_ALLOCA
     #include <stdlib.h>
-#elif
+#else
     #error
 #endif
 

@@ -262,7 +262,7 @@ LOCAL_C_INCLUDES := \
         $(LOCAL_PATH)/otherlibs/highgui
 LOCAL_CFLAGS := $(LOCAL_C_INCLUDES:%=-I%)
 LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -ldl -llog \
-                -L$(NDK_APP_OUT)/opencv -lcxcore -lcv -lcvaux -lcvml -lcvhighgui
+                -L$(TARGET_OUT) -lcxcore -lcv -lcvaux -lcvml -lcvhighgui
 
 
 LOCAL_SRC_FILES := \
