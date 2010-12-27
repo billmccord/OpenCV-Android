@@ -4,27 +4,22 @@ Dedicated to providing an optimized port of OpenCV for the Google Android OS.
 
 == Requirements
 
-In order to use OpenCV-Android, you will need to download and install both the Android SDK and NDK version 1.6.  It may or may not work with a higher version. It has been confirmed that this doesn't work with older versions, so please use 1.6 or higher.
+In order to use OpenCV-Android, you will need to download and install both the Android SDK 1.6 and NDK r5.  It may or may not work with a higher / lower version. It has been confirmed that this doesn't work with older versions of Android SDK, so please use 1.6 or higher.
 
 In addition to having the SDK or NDK you will also need to have one of the following:
 * An Android Phone Dev Phone (Might work with other phones, has not been tested)
-* A newer version of the QuickTime Java Libraries
+* The QuickTime Java Libraries (optional if you want to use the QTWebcamBroadcaster)
 
 For those of you running on the emulator, I built a very simple Socket-based Camera server that will send images over a socket connection.  This uses the QuickTime libraries which are present by default on Mac OS X, but I haven't tested on other OSes.  If it doesn't work for you, you can always try the original WebcamBroadcaster I derived mine from which uses the JMF (which doesn't work with Mac OS X, hence the QTWebcamBroadcaster):
 http://www.tomgibara.com/android/camera-source
 
 == Build
 
-Building is quite simple.  I'm going to assume that you are familiar with Android if you are reading this and keep it rather short.
+Building is now even easier with NDK r5.  I'm going to assume that you are familiar with Android if you are reading this and keep it rather short.
 
-* Create a symbolic link from the directory where you pulled the OpenCV-Android repository to your [ANDROID_NDK_ROOT]/apps/ directory.  Examples:
-  ln -s ~/Source/OpenCV-Android opencv
+* Make sure that ndk-build is in your path.
 
-* From the [ANDROID_NDK_ROOT] run:
-  build/host-setup.sh
-
-* Now run:
-  make APP=opencv
+* Go to the OpenCV-Android project directory and run 'ndk-build'
   
 By default, this will build the opencv library and push it into:
 [OPENCV_ANDROID_ROOT]/tests/VideoEmulation/libs
@@ -35,6 +30,10 @@ You can change where the lib is delivered by modifying the APP_PROJECT_PATH in:
 Once you have built the OpenCV library, you can now build and [OPENCV_ANDROID_ROOT]/tests/VideoEmulation.
 
 <b>NOTE:</b> If you plan to use the Socket Camera, you will need to build and run the [OPENCV_ANDROID_ROOT]/tests/QTWebcamBroadcaster first.  Also, if you use Eclipse to develop Android, there are already projects defined for both of these applications.  You can simply import them into your workspace.
+
+<b>IMPORTANT NEW NOTE:</b> In order for the QTWebcamBroadcaster to work, you must ensure that you run it in a 32-bit VM.  Failure to run in 32-bit will result in an empty screen in your emulator (no image will appear.)  You can easily force the VM that runs this application to 32-bit by adding the VM flag:
+-d32
+
 
 == Setup
 
